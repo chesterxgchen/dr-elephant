@@ -18,9 +18,6 @@ object ElephantBuild extends Build {
   lazy val targetVersion = configs.getProperty("java.target.version")
   lazy val docSourceVersion =  configs.getProperty("java.doc.source.version")
 
-  println("sourceVersion = " + sourceVersion)
-  println("targetVersion = " + targetVersion)
-
   lazy val root = Project(
     id = "root",
     base = file("."),
