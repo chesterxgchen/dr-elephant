@@ -28,18 +28,24 @@ function play_command() {
   fi
 }
 
-# Default configurations
-HADOOP_VERSION="2.3.0"
-SPARK_VERSION="1.4.0"
+
+
+set -x
+trap "exit" SIGINT SIGTERM
+
+project_root=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+cd ${project_root}
 
 # User should pass an optional argument which is a path to config file
 if [ -z "$1" ];
 then
   echo "Using the default configuration"
+  CONF_FILE_PATH="${project_root}/app-conf/compile.conf"
 else
   CONF_FILE_PATH=$1
-  echo "Using config file: "$CONF_FILE_PATH
+fi
 
+  echo "Using config file: "$CONF_FILE_PATH
   # User must give a valid file as argument
   if [ -f $CONF_FILE_PATH ];
   then
@@ -66,7 +72,7 @@ else
   if [ -n "${play_opts}" ]; then
     PLAY_OPTS=${play_opts}
   fi
-fi
+
 
 echo "Hadoop Version : $HADOOP_VERSION"
 echo "Spark Version  : $SPARK_VERSION"
@@ -76,11 +82,6 @@ OPTS+=" -Dhadoopversion=$HADOOP_VERSION"
 OPTS+=" -Dsparkversion=$SPARK_VERSION"
 OPTS+=" $PLAY_OPTS"
 
-set -x
-trap "exit" SIGINT SIGTERM
-
-project_root=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-cd ${project_root}
 
 start_script=${project_root}/scripts/start.sh
 stop_script=${project_root}/scripts/stop.sh
@@ -99,9 +100,8 @@ rm ${ZIP_NAME}
 DIST_NAME=${ZIP_NAME%.zip}
 
 chmod +x ${DIST_NAME}/bin/dr-elephant
-
 # Append hadoop classpath and the ELEPHANT_CONF_DIR to the Classpath
-sed -i.bak $'/declare -r app_classpath/s/.$/:`hadoop classpath`:${ELEPHANT_CONF_DIR}"/' ${DIST_NAME}/bin/dr-elephant
+# sed -i.bak $'/declare -r app_classpath/s/.$/:`hadoop classpath`:${ELEPHANT_CONF_DIR}"/' ${DIST_NAME}/bin/dr-elephant
 
 cp $start_script ${DIST_NAME}/bin/
 

@@ -16,62 +16,123 @@
 
 import play.Project._
 import sbt._
+import BuildConfig._
 
 object Dependencies {
 
   // Dependency Version
+<<<<<<< 2d86f06571a2c6dc4d2c2bab9bbb8e3c3239f4d6
   lazy val commonsCodecVersion = "1.10"
   lazy val commonsIoVersion = "2.4"
   lazy val gsonVersion = "2.2.4"
   lazy val guavaVersion = "18.0"          // Hadoop defaultly are using guava 11.0, might raise NoSuchMethodException
+=======
+  lazy val commonsIoVersion        = "2.4"
+  lazy val gsonVersion             = "2.2.4"
+  lazy val guavaVersion            = "18.0"          // Hadoop defaultly are using guava 11.0, might raise NoSuchMethodException
+>>>>>>> The Main changes are the followings:
   lazy val jacksonMapperAslVersion = "1.7.3"
-  lazy val jsoupVersion = "1.7.3"
-  lazy val mysqlConnectorVersion = "5.1.36"
+  lazy val jsoupVersion            = "1.7.3"
+  lazy val mysqlConnectorVersion   = "5.1.36"
+  lazy val mockitoVersion          = "1.10.19"
+  lazy val HADOOP_VERSION          = "hadoopversion"
+  lazy val SPARK_VERSION           = "sparkversion"
 
-  lazy val HADOOP_VERSION = "hadoopversion"
-  lazy val SPARK_VERSION = "sparkversion"
-
-  var hadoopVersion = "2.3.0"
-  if (System.getProperties.getProperty(HADOOP_VERSION) != null) {
-    hadoopVersion = System.getProperties.getProperty(HADOOP_VERSION)
-  }
-
-  var sparkVersion = "1.4.0"
-  if (System.getProperties.getProperty(SPARK_VERSION) != null) {
-    sparkVersion = System.getProperties.getProperty(SPARK_VERSION)
-  }
-
-  val sparkExclusion = if (sparkVersion >= "1.5.0") {
-    "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
-      ExclusionRule(organization = "com.typesafe.akka"),
-      ExclusionRule(organization = "org.apache.avro"),
-      ExclusionRule(organization = "org.apache.hadoop"),
-      ExclusionRule(organization = "net.razorvine")
-    )
-  } else {
-    "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
-      ExclusionRule(organization = "org.apache.avro"),
-      ExclusionRule(organization = "org.apache.hadoop"),
-      ExclusionRule(organization = "net.razorvine")
-    )
-  }
+  lazy val configs                 = loadConfigurations
+  lazy val hadoopVersion           = getHadoopVersion
+  lazy val sparkVersion            = getSparkVersion
+  lazy val dbVendor                = configs.getProperty("db_vendor")
 
   // Dependency coordinates
-  var requiredDep = Seq(
+  var requiredDep = commonDependencies ++
+                    dbDependencies(dbVendor) ++
+                    hadoopDependencies(hadoopVersion) ++
+                    sparkDependencies(sparkVersion) ++
+                    otherDependencies
+
+  val dependencies = Seq(javaJdbc, javaEbean, cache) ++ requiredDep
+
+  private def commonDependencies = Seq(
     "com.google.code.gson" % "gson" % gsonVersion,
     "com.google.guava" % "guava" % guavaVersion,
-    "commons-codec" % "commons-codec" % commonsCodecVersion,
-    "commons-io" % "commons-io" % commonsIoVersion,
-    "mysql" % "mysql-connector-java" % mysqlConnectorVersion,
-    "org.apache.hadoop" % "hadoop-auth" % hadoopVersion % "compileonly",
-    "org.apache.hadoop" % "hadoop-common" % hadoopVersion % "compileonly",
-    "org.apache.hadoop" % "hadoop-common" % hadoopVersion % Test,
-    "org.apache.hadoop" % "hadoop-hdfs" % hadoopVersion % "compileonly",
+    "commons-io" % "commons-io" % commonsIoVersion
+  )
+
+
+  private def otherDependencies = Seq(
     "org.codehaus.jackson" % "jackson-mapper-asl" % jacksonMapperAslVersion,
     "org.jsoup" % "jsoup" % jsoupVersion,
-    "org.mockito" % "mockito-core" % "1.10.19"
-  ) :+ sparkExclusion 
+    "org.mockito" % "mockito-core" % mockitoVersion
+  )
+  private def dbDependencies (dbVendor: String) = {
+    dbVendor match  {
+      case "mysql" =>
+       Seq("mysql" % "mysql-connector-java" % mysqlConnectorVersion)
+      case "postgresql" =>
+        Seq("postgresql" % "postgresql" % "9.1-901.jdbc4")
+      case _ =>
+        Seq("mysql" % "mysql-connector-java" % mysqlConnectorVersion)
+    }
+  }
 
-  var dependencies = Seq(javaJdbc, javaEbean, cache)
-  dependencies ++= requiredDep
+
+  private def sparkDependencies(sparkVersion: String) = {
+
+    val rules = if (sparkVersion >= "1.5.0") {
+      Seq(
+        ExclusionRule(organization = "com.typesafe.akka"),
+        ExclusionRule(organization = "org.apache.avro"),
+        ExclusionRule(organization = "org.apache.hadoop"),
+        ExclusionRule(organization = "net.razorvine")
+      )
+    }
+    else {
+      Seq(
+        ExclusionRule(organization = "org.apache.avro"),
+        ExclusionRule(organization = "org.apache.hadoop"),
+        ExclusionRule(organization = "net.razorvine")
+      )
+    }
+
+    Seq(
+      "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(rules:_*)
+    )
+  }
+
+  private def hadoopDependencies(hadoopVersion: String) = {
+        Seq(
+          "org.apache.hadoop" % "hadoop-auth" % hadoopVersion,
+          "org.apache.hadoop" % "hadoop-common" % hadoopVersion ,
+          "org.apache.hadoop" % "hadoop-common" % hadoopVersion % Test,
+          "org.apache.hadoop" % "hadoop-hdfs" % hadoopVersion
+        )
+  }
+
+  private def getHadoopVersion: String = {
+
+    val sysProp = System.getProperties.getProperty(HADOOP_VERSION)
+    if (sysProp != null) sysProp
+    else {
+      val envProp = System.getenv("HADOOP_VERSION")
+      if (envProp != null) envProp
+      else
+        configs.getProperty("hadoop_version")
+    }
+  }
+
+
+  private def getSparkVersion: String = {
+
+    val sysProp = System.getProperties.getProperty(SPARK_VERSION)
+    if (sysProp != null) sysProp
+    else {
+      val envProp = System.getenv("SPARK_VERSION")
+      if (envProp != null) envProp
+      else
+        configs.getProperty("spark_version")
+    }
+
+  }
+>>>>>>> The Main changes are the followings:
+
 }
