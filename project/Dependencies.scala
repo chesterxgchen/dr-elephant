@@ -21,16 +21,10 @@ import BuildConfig._
 object Dependencies {
 
   // Dependency Version
-<<<<<<< 2d86f06571a2c6dc4d2c2bab9bbb8e3c3239f4d6
-  lazy val commonsCodecVersion = "1.10"
-  lazy val commonsIoVersion = "2.4"
-  lazy val gsonVersion = "2.2.4"
-  lazy val guavaVersion = "18.0"          // Hadoop defaultly are using guava 11.0, might raise NoSuchMethodException
-=======
+  lazy val commonsCodecVersion     = "1.10"
   lazy val commonsIoVersion        = "2.4"
   lazy val gsonVersion             = "2.2.4"
   lazy val guavaVersion            = "18.0"          // Hadoop defaultly are using guava 11.0, might raise NoSuchMethodException
->>>>>>> The Main changes are the followings:
   lazy val jacksonMapperAslVersion = "1.7.3"
   lazy val jsoupVersion            = "1.7.3"
   lazy val mysqlConnectorVersion   = "5.1.36"
@@ -47,23 +41,21 @@ object Dependencies {
   var requiredDep = commonDependencies ++
                     dbDependencies(dbVendor) ++
                     hadoopDependencies(hadoopVersion) ++
-                    sparkDependencies(sparkVersion) ++
-                    otherDependencies
+                    sparkDependencies(sparkVersion)
 
   val dependencies = Seq(javaJdbc, javaEbean, cache) ++ requiredDep
 
   private def commonDependencies = Seq(
     "com.google.code.gson" % "gson" % gsonVersion,
     "com.google.guava" % "guava" % guavaVersion,
-    "commons-io" % "commons-io" % commonsIoVersion
-  )
-
-
-  private def otherDependencies = Seq(
+    "commons-io" % "commons-io" % commonsIoVersion,
+    "commons-codec" % "commons-codec" % commonsCodecVersion,
     "org.codehaus.jackson" % "jackson-mapper-asl" % jacksonMapperAslVersion,
     "org.jsoup" % "jsoup" % jsoupVersion,
     "org.mockito" % "mockito-core" % mockitoVersion
   )
+
+
   private def dbDependencies (dbVendor: String) = {
     dbVendor match  {
       case "mysql" =>
@@ -133,6 +125,5 @@ object Dependencies {
     }
 
   }
->>>>>>> The Main changes are the followings:
 
 }
