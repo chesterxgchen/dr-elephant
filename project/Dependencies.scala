@@ -57,14 +57,8 @@ object Dependencies {
 
 
   private def dbDependencies (dbVendor: String) = {
-    dbVendor match  {
-      case "mysql" =>
        Seq("mysql" % "mysql-connector-java" % mysqlConnectorVersion)
-      case "postgresql" =>
-        Seq("postgresql" % "postgresql" % "9.1-901.jdbc4")
-      case _ =>
-        Seq("mysql" % "mysql-connector-java" % mysqlConnectorVersion)
-    }
+       Seq("postgresql" % "postgresql" % "9.1-901.jdbc4")
   }
 
 

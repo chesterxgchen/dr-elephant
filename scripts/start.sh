@@ -80,6 +80,7 @@ check=1
 check_config db_url
 check_config db_name
 check_config db_user
+check_config db_vendor
 
 if [ $check = 0 ];
 then
@@ -87,7 +88,11 @@ then
   exit 1
 fi
 
-db_loc="jdbc:mysql://"$db_url"/"$db_name"?characterEncoding=UTF-8"
+if [ "$db_vendor" = "postgres" ]; then
+    db_loc="jdbc:postgresql://"$db_url"/"$db_name"?characterEncoding=UTF-8"
+else
+    db_loc="jdbc:mysql://"$db_url"/"$db_name"?characterEncoding=UTF-8"
+fi;
 
 # db_password is optional. default is ""
 db_password="${db_password:-""}"
